@@ -49,7 +49,6 @@ No downloads needed — just open and play! 🎮
 | 👁️ **Preview Button** | Hold to see the target solution |
 | 📊 **Live Progress** | Progress bar shows how close you are |
 | 🎊 **Confetti** | Celebration when you solve a level! |
-| 💛 **Chrome Yellow Theme** | Beautiful golden color theme |
 | ✨ **Particle Effects** | Floating particles in background |
 | 📱 **Mobile Friendly** | Play on phone or computer |
 | 📈 **Data Collection** | Results saved to Google Sheets |
@@ -332,44 +331,17 @@ Tip 6 → In PvP mode watch your
 opponent's time and try
 to beat it!
 
-
-
-
----
-
-## 🌈 Theme Details
-Color Theme: Chrome Yellow / Gold
-
-Main Colors Used:
-💛 #FFD700 → Chrome Yellow (main color)
-🟡 #FFA500 → Orange Gold (accent)
-🟤 #CC9900 → Dark Gold (buttons)
-⚫ #1a1400 → Dark Background
-🟡 #FFE44D → Light Yellow (highlights)
-
-The golden theme represents:
-✨ Adventure and treasure
-🏆 Victory and achievement
-⭐ Excellence and quality
-
-
-
-
 ---
 
 ## 📱 Screenshots Description
 
 ### Home Page (index.html)
-💛 Chrome yellow dark background
 🧩 Bouncing puzzle logo animation
 ✨ Floating particle effects
 🤖 Player vs Bot card (glows on hover)
 👥 Player vs Player card (glows on hover)
 🔄 Resume game option
 📖 How to play guide
-
-
-
 
 ### Game Page (game.html)
 📊 Live score bar for both players
@@ -438,10 +410,10 @@ to challenge each other!
 <div align="center">
 ╔═══════════════════════════════╗
 ║ Vimal Raj Mandal ║
-║ Game Developer & Creator ║
+║ Beginner Game Creator ║
 ║ India 🇮🇳 ║
 ║ ║
-║ GitHub: YOUR-USERNAME ║
+║ GitHub:(https://github.com/vimalrajmandal586) ║
 ╚═══════════════════════════════╝
 
 
@@ -450,23 +422,13 @@ to challenge each other!
 > *them into beautiful animated websites*
 > *and games!"*
 
-### My Other Projects:
-
-| Project | Description | Link |
-|---------|-------------|------|
-| 🎯 Quiz Website | 3 category quiz with admin panel | [Play](https://YOUR-USERNAME.github.io/my-quiz/) |
-| ✊ Rock Paper Scissors | Animated battle game | [Play](https://YOUR-USERNAME.github.io/rock-paper-scissors/) |
-| 🧩 Puzzle Adventure | Story puzzle game | [Play](https://YOUR-USERNAME.github.io/puzzle-adventure/) |
-
-</div>
-
 ---
 
 ## 📜 License
 This project is free to use
 for learning and fun purposes!
 
-Made with ❤️ and 💛 in India 🇮🇳
+Made with ❤️ in India 🇮🇳
 
 
 
