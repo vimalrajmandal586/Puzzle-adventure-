@@ -16,11 +16,6 @@ Markdown
 
 ### 🌐 [▶️ PLAY THE GAME NOW](https://github.com/vimalrajmandal586)
 
-<br>
-
-<img src="https://cdn-www.bluestacks.com/bs-images/featured_com.pixelfederation.solve.mystery.puzzle.adventure.jpg" width="600" style="border-radius:15px;"/>
-
-<br>
 
 </div>
 
