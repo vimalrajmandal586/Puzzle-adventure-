@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Adventure</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="game-logo">🧩</div>
+        <h1>PUZZLE ADVENTURE</h1>
+        <p class="tagline">✨ Solve • Explore • Conquer ✨</p>
+    </div>
+
+    <!-- MAIN MENU -->
+    <div id="mainMenu">
+
+        <!-- MODE SELECTION -->
+        <div class="mode-cards">
+
+            <div class="mode-card pvb-card" onclick="selectMode('pvb')">
+                <div class="mode-icon">🤖</div>
+                <h2>Player vs Bot</h2>
+                <p>Challenge our smart AI bot! 
+                   Race against time and beat 
+                   the bot's score!</p>
+                <div class="mode-badge">Single Player</div>
+            </div>
+
+            <div class="mode-card pvp-card" onclick="selectMode('pvp')">
+                <div class="mode-icon">👥</div>
+                <h2>Player vs Player</h2>
+                <p>Challenge your friend! 
+                   Take turns solving puzzles.
+                   Who solves faster wins!</p>
+                <div class="mode-badge">2 Players</div>
+            </div>
+
+        </div>
+
+        <!-- RESUME SECTION -->
+        <div class="card resume-card" id="resumeSection" 
+             style="display:none;">
+            <h3>🔄 Resume Game</h3>
+            <p class="subtitle">Enter your name to continue!</p>
+            <input type="text" id="resumeName" 
+                   placeholder="Your name..."/>
+            <button class="resume-btn" onclick="resumeGame()">
+                ▶️ Resume My Game
+            </button>
+            <p id="resumeError" class="error"></p>
+        </div>
+
+        <!-- SHOW RESUME BUTTON -->
+        <button class="show-resume-btn" 
+                onclick="toggleResume()">
+            🔄 Already Playing? Resume Here
+        </button>
+
+    </div>
+
+    <!-- PLAYER SETUP FORM -->
+    <div id="setupForm" style="display:none;">
+
+        <!-- PVB FORM -->
+        <div id="pvbForm" style="display:none;">
+            <div class="card">
+                <button class="back-btn" onclick="goBack()">
+                    ← Back
+                </button>
+                <h2>🤖 Player vs Bot Setup</h2>
+                <p class="subtitle">Enter your details to begin!</p>
+
+                <label>👤 Your Name:</label>
+                <input type="text" id="pvbName" 
+                       placeholder="Enter your name..."
+                       maxlength="20"/>
+
+                <label>🤖 Bot Difficulty:</label>
+                <div class="difficulty-cards">
+                    <div class="diff-card selected" 
+                         data-diff="easy"
+                         onclick="selectDiff(this,'pvb')">
+                        <span>😊</span>
+                        <span>Easy</span>
+                    </div>
+                    <div class="diff-card" 
+                         data-diff="medium"
+                         onclick="selectDiff(this,'pvb')">
+                        <span>😐</span>
+                        <span>Medium</span>
+                    </div>
+                    <div class="diff-card" 
+                         data-diff="hard"
+                         onclick="selectDiff(this,'pvb')">
+                        <span>😤</span>
+                        <span>Hard</span>
+                    </div>
+                </div>
+
+                <label>🗺️ Starting Level:</label>
+                <select id="pvbLevel">
+                    <option value="1">
+                        Level 1 - The Lost Temple 🏛️
+                    </option>
+                    <option value="2">
+                        Level 2 - The Dark Forest 🌲
+                    </option>
+                    <option value="3">
+                        Level 3 - The Ice Castle ❄️
+                    </option>
+                    <option value="4">
+                        Level 4 - The Final Dungeon 🏰
+                    </option>
+                </select>
+
+                <button class="main-btn" onclick="startPVB()">
+                    🚀 Start Adventure!
+                </button>
+                <p id="pvbError" class="error"></p>
+            </div>
+        </div>
+
+        <!-- PVP FORM -->
+        <div id="pvpForm" style="display:none;">
+            <div class="card">
+                <button class="back-btn" onclick="goBack()">
+                    ← Back
+                </button>
+                <h2>👥 Player vs Player Setup</h2>
+                <p class="subtitle">
+                    Two players — one winner!
+                </p>
+
+                <label>👤 Player 1 Name:</label>
+                <input type="text" id="p1Name" 
+                       placeholder="Player 1 name..."
+                       maxlength="20"/>
+
+                <label>👤 Player 2 Name:</label>
+                <input type="text" id="p2Name" 
+                       placeholder="Player 2 name..."
+                       maxlength="20"/>
+
+                <label>🗺️ Starting Level:</label>
+                <select id="pvpLevel">
+                    <option value="1">
+                        Level 1 - The Lost Temple 🏛️
+                    </option>
+                    <option value="2">
+                        Level 2 - The Dark Forest 🌲
+                    </option>
+                    <option value="3">
+                        Level 3 - The Ice Castle ❄️
+                    </option>
+                    <option value="4">
+                        Level 4 - The Final Dungeon 🏰
+                    </option>
+                </select>
+
+                <button class="main-btn" onclick="startPVP()">
+                    🚀 Start Battle!
+                </button>
+                <p id="pvpError" class="error"></p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- HOW TO PLAY -->
+    <div class="card how-to-card" id="howToCard">
+        <h3>📖 How To Play</h3>
+        <div class="how-steps">
+            <div class="how-step">
+                <span class="step-num">1</span>
+                <span>Choose your game mode</span>
+            </div>
+            <div class="how-step">
+                <span class="step-num">2</span>
+                <span>Slide tiles to arrange picture</span>
+            </div>
+            <div class="how-step">
+                <span class="step-num">3</span>
+                <span>Complete faster for more points</span>
+            </div>
+            <div class="how-step">
+                <span class="step-num">4</span>
+                <span>Beat all 4 levels to win!</span>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// ============================================================
+//   SETUP
+// ============================================================
+let selectedMode = '';
+let selectedDiffPVB = 'easy';
+
+document.addEventListener('DOMContentLoaded', () => {
+    createParticles();
+    checkSavedGames();
+});
+
+// ============================================================
+//   PARTICLES
+// ============================================================
+function createParticles() {
+    const c = document.getElementById('particles');
+    const emojis = ['🧩','⭐','✨','🌟','💫','🎯'];
+    for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.textContent = 
+            emojis[Math.floor(Math.random() * emojis.length)];
+        p.style.left   = Math.random() * 100 + 'vw';
+        p.style.top    = Math.random() * 100 + 'vh';
+        p.style.fontSize = Math.random() * 20 + 10 + 'px';
+        p.style.animationDuration  = Math.random()*15 + 8 + 's';
+        p.style.animationDelay     = Math.random() * 5 + 's';
+        p.style.opacity = Math.random() * 0.3 + 0.05;
+        c.appendChild(p);
+    }
+}
+
+// ============================================================
+//   MODE SELECTION
+// ============================================================
+function selectMode(mode) {
+    selectedMode = mode;
+    document.getElementById('mainMenu').style.display   = 'none';
+    document.getElementById('howToCard').style.display  = 'none';
+    document.getElementById('setupForm').style.display  = 'block';
+
+    if (mode === 'pvb') {
+        document.getElementById('pvbForm').style.display = 'block';
+        document.getElementById('pvpForm').style.display = 'none';
+    } else {
+        document.getElementById('pvpForm').style.display = 'block';
+        document.getElementById('pvbForm').style.display = 'none';
+    }
+}
+
+function goBack() {
+    document.getElementById('mainMenu').style.display  = 'block';
+    document.getElementById('howToCard').style.display = 'block';
+    document.getElementById('setupForm').style.display = 'none';
+    document.getElementById('pvbForm').style.display   = 'none';
+    document.getElementById('pvpForm').style.display   = 'none';
+}
+
+// ============================================================
+//   DIFFICULTY SELECTION
+// ============================================================
+function selectDiff(el, mode) {
+    document.querySelectorAll('.diff-card').forEach(c => {
+        c.classList.remove('selected');
+    });
+    el.classList.add('selected');
+    selectedDiffPVB = el.getAttribute('data-diff');
+}
+
+// ============================================================
+//   START PVB
+// ============================================================
+function startPVB() {
+    const name  = document.getElementById('pvbName').value.trim();
+    const level = document.getElementById('pvbLevel').value;
+    const errEl = document.getElementById('pvbError');
+
+    if (!name) {
+        errEl.textContent = '⚠️ Please enter your name!';
+        return;
+    }
+    if (name.length < 2) {
+        errEl.textContent = '⚠️ Name too short!';
+        return;
+    }
+
+    errEl.textContent = '';
+
+    const gameData = {
+        mode        : 'pvb',
+        p1Name      : name,
+        p2Name      : 'Bot (' + selectedDiffPVB + ')',
+        difficulty  : selectedDiffPVB,
+        currentLevel: parseInt(level),
+        p1Score     : 0,
+        p2Score     : 0,
+        p1Levels    : [],
+        p2Levels    : [],
+        startTime   : Date.now(),
+        currentTurn : 'p1'
+    };
+
+    saveGameState(name, gameData);
+    sessionStorage.setItem('gameData', JSON.stringify(gameData));
+    window.location.href = 'game.html';
+}
+
+// ============================================================
+//   START PVP
+// ============================================================
+function startPVP() {
+    const p1    = document.getElementById('p1Name').value.trim();
+    const p2    = document.getElementById('p2Name').value.trim();
+    const level = document.getElementById('pvpLevel').value;
+    const errEl = document.getElementById('pvpError');
+
+    if (!p1 || !p2) {
+        errEl.textContent = '⚠️ Both player names required!';
+        return;
+    }
+    if (p1.toLowerCase() === p2.toLowerCase()) {
+        errEl.textContent = '⚠️ Players must have different names!';
+        return;
+    }
+
+    errEl.textContent = '';
+
+    const gameData = {
+        mode        : 'pvp',
+        p1Name      : p1,
+        p2Name      : p2,
+        difficulty  : 'pvp',
+        currentLevel: parseInt(level),
+        p1Score     : 0,
+        p2Score     : 0,
+        p1Levels    : [],
+        p2Levels    : [],
+        startTime   : Date.now(),
+        currentTurn : 'p1'
+    };
+
+    saveGameState(p1 + '_' + p2, gameData);
+    sessionStorage.setItem('gameData', JSON.stringify(gameData));
+    window.location.href = 'game.html';
+}
+
+// ============================================================
+//   SAVE + LOAD GAME STATE
+// ============================================================
+function saveGameState(key, data) {
+    const saves = JSON.parse(
+        localStorage.getItem('puzzleSaves') || '{}'
+    );
+    saves[key.toLowerCase()] = data;
+    localStorage.setItem('puzzleSaves', JSON.stringify(saves));
+}
+
+function checkSavedGames() {
+    const saves = JSON.parse(
+        localStorage.getItem('puzzleSaves') || '{}'
+    );
+    if (Object.keys(saves).length > 0) {
+        document.getElementById('resumeSection')
+            .style.display = 'block';
+    }
+}
+
+function toggleResume() {
+    const s = document.getElementById('resumeSection');
+    s.style.display = 
+        s.style.display === 'none' ? 'block' : 'none';
+}
+
+function resumeGame() {
+    const name  = document.getElementById('resumeName')
+                          .value.trim().toLowerCase();
+    const errEl = document.getElementById('resumeError');
+    const saves = JSON.parse(
+        localStorage.getItem('puzzleSaves') || '{}'
+    );
+
+    // Try to find save by name
+    let found = null;
+    for (let key in saves) {
+        if (key.includes(name)) {
+            found = saves[key];
+            break;
+        }
+    }
+
+    if (!found) {
+        errEl.textContent = 
+            '⚠️ No saved game found for "' + name + '"';
+        return;
+    }
+
+    errEl.textContent = '';
+    sessionStorage.setItem('gameData', JSON.stringify(found));
+    window.location.href = 'game.html';
+}
+</script>
+</body>
+</html>

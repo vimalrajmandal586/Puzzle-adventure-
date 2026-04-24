@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Over - Puzzle Adventure</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="particles" id="particles"></div>
+<div id="confettiContainer"></div>
+
+<div class="container">
+
+    <!-- WINNER BANNER -->
+    <div class="winner-banner" id="winnerBanner">
+        <div class="winner-trophy" id="winnerTrophy">🏆</div>
+        <h1 id="winnerTitle">Adventure Complete!</h1>
+        <p id="winnerSubtitle" class="subtitle"></p>
+    </div>
+
+    <!-- FINAL SCORES -->
+    <div class="card final-score-card">
+        <h2>📊 Final Scores</h2>
+
+        <div class="final-players">
+            <div class="final-player" id="finalP1">
+                <div class="final-avatar" id="p1Avatar">👤</div>
+                <div class="final-name" id="finalP1Name">
+                    Player 1
+                </div>
+                <div class="final-score-big" id="finalP1Score">
+                    0
+                </div>
+                <div class="final-label">Total Points</div>
+                <div class="winner-crown" 
+                     id="p1Crown" 
+                     style="display:none;">
+                    👑 WINNER!
+                </div>
+            </div>
+
+            <div class="vs-divider">VS</div>
+
+            <div class="final-player" id="finalP2">
+                <div class="final-avatar" id="p2Avatar">🤖</div>
+                <div class="final-name" id="finalP2Name">
+                    Player 2
+                </div>
+                <div class="final-score-big" id="finalP2Score">
+                    0
+                </div>
+                <div class="final-label">Total Points</div>
+                <div class="winner-crown" 
+                     id="p2Crown" 
+                     style="display:none;">
+                    👑 WINNER!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEVEL BREAKDOWN -->
+    <div class="card">
+        <h2>🗺️ Level Breakdown</h2>
+        <div id="levelBreakdown">
+        </div>
+    </div>
+
+    <!-- RATING -->
+    <div class="card" id="ratingCard">
+        <h2>⭐ Rate The Game!</h2>
+        <p class="subtitle">How was your adventure?</p>
+
+        <label>Your Rating:</label>
+        <div class="star-rating" id="starRating">
+            <span class="star" data-val="1">★</span>
+            <span class="star" data-val="2">★</span>
+            <span class="star" data-val="3">★</span>
+            <span class="star" data-val="4">★</span>
+            <span class="star" data-val="5">★</span>
+        </div>
+        <p id="starLabel" class="star-label">
+            Click to rate!
+        </p>
+
+        <label for="feedbackText">💬 Comments:</label>
+        <textarea id="feedbackText"
+            placeholder="How was the puzzle adventure?"
+            rows="3">
+        </textarea>
+
+        <button class="main-btn" onclick="submitResults()">
+            📨 Save Results & Finish!
+        </button>
+        <p id="submitError" class="error"></p>
+    </div>
+
+</div>
+
+<script>
+// ============================================================
+//   SHEET URL
+// ============================================================
+const SHEET_URL = "PASTE-YOUR-GOOGLE-SHEET-URL-HERE";
+
+let starRating = 0;
+let gameData   = null;
+
+// ============================================================
+//   INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    gameData = JSON.parse(sessionStorage.getItem('gameData'));
+    if (!gameData) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    createParticles();
+    showFinalResults();
+    setupStars();
+
+    if (gameData.p1Score !== gameData.p2Score) {
+        setTimeout(() => launchConfetti(), 500);
+    }
+});
+
+// ============================================================
+//   SHOW FINAL RESULTS
+// ============================================================
+function showFinalResults() {
+    const d = gameData;
+
+    document.getElementById('finalP1Name').textContent  = d.p1Name;
+    document.getElementById('finalP2Name').textContent  = d.p2Name;
+    document.getElementById('finalP1Score').textContent = d.p1Score;
+    document.getElementById('finalP2Score').textContent = d.p2Score;
+
+    // Bot avatar
+    if (d.mode === 'pvb') {
+        document.getElementById('p2Avatar').textContent = '🤖';
+    }
+
+    // Winner
+    const title    = document.getElementById('winnerTitle');
+    const subtitle = document.getElementById('winnerSubtitle');
+    const trophy   = document.getElementById('winnerTrophy');
+
+    if (d.p1Score > d.p2Score) {
+        document.getElementById('p1Crown').style.display = 'block';
+        document.getElementById('finalP1').classList.add('winner-player');
+        title.textContent    = d.p1Name + ' Wins! 🎉';
+        subtitle.textContent = 'Congratulations Champion!';
+        trophy.textContent   = '🏆';
+    } else if (d.p2Score > d.p1Score) {
+        document.getElementById('p2Crown').style.display = 'block';
+        document.getElementById('finalP2').classList.add('winner-player');
+        title.textContent    = d.p2Name + ' Wins! 🎉';
+        subtitle.textContent = d.mode === 'pvb'
+            ? 'The Bot was too smart! Try again!'
+            : 'Congratulations Champion!';
+        trophy.textContent   = d.mode === 'pvb' ? '🤖' : '🏆';
+    } else {
+        title.textContent    = 'Perfect Draw! 🤝';
+        subtitle.textContent = 'Both players are equally amazing!';
+        trophy.textContent   = '🤝';
+    }
+
+    // Level breakdown
+    buildLevelBreakdown(d);
+}
+
+// ============================================================
+//   LEVEL BREAKDOWN
+// ============================================================
+function buildLevelBreakdown(d) {
+    const container = document.getElementById('levelBreakdown');
+    const maxLevel  = Math.max(
+        d.p1Levels.length,
+        d.p2Levels.length
+    );
+
+    if (maxLevel === 0) {
+        container.innerHTML =
+            '<p class="subtitle">No levels completed yet!</p>';
+        return;
+    }
+
+    let html = '';
+    for (let i = 0; i < maxLevel; i++) {
+        const lvlNum  = (d.currentLevel - maxLevel + i + 1);
+        const p1lvl   = d.p1Levels[i];
+        const p2lvl   = d.p2Levels[i];
+        const lvlData = {1:'🏛️',2:'🌲',3:'❄️',4:'🏰'};
+
+        html += `
+        <div class="level-breakdown-row">
+            <div class="breakdown-level">
+                ${lvlData[i+1] || '🧩'} Level ${i+1}
+            </div>
+            <div class="breakdown-players">
+                <div class="breakdown-player p1-breakdown">
+                    <span>${d.p1Name}</span>
+                    ${p1lvl ? `
+                        <span class="breakdown-stat">
+                            ⏱️ ${formatTime(p1lvl.time)}
+                        </span>
+                        <span class="breakdown-stat">
+                            🎮 ${p1lvl.moves} moves
+                        </span>
+                        <span class="breakdown-points">
+                            +${p1lvl.points} pts
+                        </span>
+                    ` : '<span class="not-played">-</span>'}
+                </div>
+                <div class="breakdown-player p2-breakdown">
+                    <span>${d.p2Name}</span>
+                    ${p2lvl ? `
+                        <span class="breakdown-stat">
+                            ⏱️ ${formatTime(p2lvl.time)}
+                        </span>
+                        <span class="breakdown-stat">
+                            🎮 ${p2lvl.moves} moves
+                        </span>
+                        <span class="breakdown-points">
+                            +${p2lvl.points} pts
+                        </span>
+                    ` : '<span class="not-played">-</span>'}
+                </div>
+            </div>
+        </div>`;
+    }
+
+    container.innerHTML = html;
+}
+
+function formatTime(s) {
+    const m   = Math.floor(s / 60);
+    const sec = s % 60;
+    return (m < 10 ? '0' : '') + m + ':' +
+           (sec < 10 ? '0' : '') + sec;
+}
+
+// ============================================================
+//   STAR RATING
+// ============================================================
+function setupStars() {
+    const stars = document.querySelectorAll('.star');
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            starRating = parseInt(star.getAttribute('data-val'));
+            updateStars(starRating);
+        });
+        star.addEventListener('mouseover', () => {
+            updateStars(
+                parseInt(star.getAttribute('data-val')), true
+            );
+        });
+    });
+    document.getElementById('starRating')
+        .addEventListener('mouseleave', () => {
+            updateStars(starRating);
+        });
+}
+
+function updateStars(r, h = false) {
+    const labels = [
+        "","😔 Poor","😐 Fair",
+        "🙂 Good","😊 Great!","🤩 Amazing!"
+    ];
+    document.querySelectorAll('.star').forEach((s,i) => {
+        i < r
+            ? s.classList.add('active')
+            : s.classList.remove('active');
+    });
+    if (r > 0) {
+        document.getElementById('starLabel').textContent =
+            labels[r];
+    }
+}
+
+// ============================================================
+//   SUBMIT TO GOOGLE SHEET
+// ============================================================
+function submitResults() {
+    const feedback = document.getElementById('feedbackText')
+                             .value.trim();
+    const errEl    = document.getElementById('submitError');
+
+    if (starRating === 0) {
+        errEl.textContent = '⚠️ Please give a rating!';
+        return;
+    }
+
+    errEl.textContent = '';
+
+    const d = gameData;
+    const winner =
+        d.p1Score > d.p2Score ? d.p1Name :
+        d.p2Score > d.p1Score ? d.p2Name : 'Draw';
+
+    const payload = {
+        type         : 'PUZZLE_GAME',
+        mode         : d.mode === 'pvb'
+                        ? 'Player vs Bot' : 'Player vs Player',
+        player1Name  : d.p1Name,
+        player2Name  : d.p2Name,
+        player1Score : d.p1Score,
+        player2Score : d.p2Score,
+        winner       : winner,
+        levelsPlayed : Math.max(
+                         d.p1Levels.length,
+                         d.p2Levels.length
+                       ),
+        difficulty   : d.difficulty || 'pvp',
+        stars        : starRating,
+        feedback     : feedback || 'No comment',
+        date         : new Date().toLocaleString('en-IN')
+    };
+
+    const btn = document.querySelector('.main-btn');
+    btn.textContent = '⏳ Saving...';
+    btn.disabled    = true;
+
+    fetch(SHEET_URL, {
+        method : 'POST',
+        mode   : 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body   : JSON.stringify(payload)
+    })
+    .then(() => showSuccess())
+    .catch(() => showSuccess());
+
+    // Clear saved game
+    const saves = JSON.parse(
+        localStorage.getItem('puzzleSaves') || '{}'
+    );
+    const key = d.mode === 'pvp'
+        ? d.p1Name + '_' + d.p2Name
+        : d.p1Name;
+    delete saves[key.toLowerCase()];
+    localStorage.setItem('puzzleSaves', JSON.stringify(saves));
+}
+
+// ============================================================
+//   SHOW SUCCESS
+// ============================================================
+function showSuccess() {
+    const d = gameData;
+    document.getElementById('ratingCard').innerHTML = `
+        <div style="text-align:center; padding:20px;">
+            <div style="font-size:4rem; margin-bottom:15px;">
+                🎉
+            </div>
+            <h2 style="color:#00d26a;">Results Saved!</h2>
+            <p class="subtitle">Thanks for playing!</p>
+            <div style="margin:20px 0; padding:15px;
+                        background:rgba(255,255,255,0.05);
+                        border-radius:12px;">
+                <p style="color:#ffd32a; font-size:1.1rem;
+                          font-weight:700; margin-bottom:10px;">
+                    ${d.p1Name}: ${d.p1Score} pts
+                </p>
+                <p style="color:#a8b2d8; font-size:1.1rem;
+                          font-weight:700;">
+                    ${d.p2Name}: ${d.p2Score} pts
+                </p>
+            </div>
+            <button class="main-btn"
+                onclick="window.location.href='index.html'"
+                style="margin-bottom:10px;">
+                🔄 Play Again
+            </button>
+        </div>
+    `;
+    launchConfetti();
+}
+
+// ============================================================
+//   PARTICLES + CONFETTI
+// ============================================================
+function createParticles() {
+    const c = document.getElementById('particles');
+    const emojis = ['🧩','⭐','✨','🏆','💫'];
+    for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.textContent =
+            emojis[Math.floor(Math.random()*emojis.length)];
+        p.style.left = Math.random()*100+'vw';
+        p.style.top  = Math.random()*100+'vh';
+        p.style.fontSize = Math.random()*20+10+'px';
+        p.style.animationDuration = Math.random()*15+8+'s';
+        p.style.animationDelay    = Math.random()*5+'s';
+        p.style.opacity = '0.1';
+        c.appendChild(p);
+    }
+}
+
+function launchConfetti() {
+    const c = document.getElementById('confettiContainer');
+    const colors = [
+        '#FF6B6B','#FFD32A','#00D26A',
+        '#A855F7','#00CEC9','#FD79A8'
+    ];
+    for (let i = 0; i < 100; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = Math.random()*100+'vw';
+        p.style.background =
+            colors[Math.floor(Math.random()*colors.length)];
+        p.style.width  = Math.random()*12+6+'px';
+        p.style.height = p.style.width;
+        p.style.animationDelay    = Math.random()*0.5+'s';
+        p.style.animationDuration = Math.random()*2+1.5+'s';
+        p.style.borderRadius = Math.random()>0.5?'50%':'0';
+        c.appendChild(p);
+        setTimeout(() => p.remove(), 3000);
+    }
+}
+</script>
+</body>
+</html>

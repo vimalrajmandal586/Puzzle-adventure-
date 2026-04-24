@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Adventure - Playing</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="particles" id="particles"></div>
+
+<div class="container">
+
+    <!-- TOP BAR -->
+    <div class="game-top-bar">
+        <div class="top-left">
+            <button class="back-btn" onclick="confirmQuit()">
+                🏠
+            </button>
+            <span class="level-badge" id="levelBadge">
+                Level 1
+            </span>
+        </div>
+        <div class="top-center" id="turnDisplay">
+            Your Turn!
+        </div>
+        <div class="top-right">
+            <div class="timer-box" id="timerBox">
+                ⏱️ <span id="timer">00:00</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCORE BAR -->
+    <div class="score-bar">
+        <div class="player-score-display p1-display">
+            <span id="p1Name">Player 1</span>
+            <span class="score-val" id="p1Score">0</span>
+        </div>
+        <div class="vs-badge">VS</div>
+        <div class="player-score-display p2-display">
+            <span id="p2Name">Player 2</span>
+            <span class="score-val" id="p2Score">0</span>
+        </div>
+    </div>
+
+    <!-- LEVEL STORY -->
+    <div class="story-card" id="storyCard">
+        <div class="story-icon" id="storyIcon">🏛️</div>
+        <h3 id="storyTitle">The Lost Temple</h3>
+        <p id="storyText">Loading story...</p>
+        <button class="main-btn" id="startLevelBtn"
+                onclick="startLevel()">
+            🎮 Start Puzzle!
+        </button>
+    </div>
+
+    <!-- PUZZLE AREA -->
+    <div id="puzzleArea" style="display:none;">
+
+        <!-- CURRENT PLAYER -->
+        <div class="current-player-banner" id="currentPlayerBanner">
+            👤 Your Turn to Solve!
+        </div>
+
+        <!-- HINT BAR -->
+        <div class="hint-bar">
+            <button class="hint-btn" onclick="useHint()" 
+                    id="hintBtn">
+                💡 Hint (3 left)
+            </button>
+            <div class="moves-display">
+                Moves: <span id="movesCount">0</span>
+            </div>
+            <button class="preview-btn" 
+                    id="previewBtn"
+                    onmousedown="showPreview()" 
+                    onmouseup="hidePreview()"
+                    ontouchstart="showPreview()"
+                    ontouchend="hidePreview()">
+                👁️ Preview
+            </button>
+        </div>
+
+        <!-- PUZZLE GRID -->
+        <div class="puzzle-wrapper">
+            <div class="puzzle-grid" id="puzzleGrid">
+            </div>
+
+            <!-- PREVIEW OVERLAY -->
+            <div class="preview-overlay" id="previewOverlay">
+                <div class="preview-grid" id="previewGrid">
+                </div>
+                <p style="color:white; font-weight:700; 
+                          margin-top:10px;">
+                    This is the target!
+                </p>
+            </div>
+        </div>
+
+        <!-- PROGRESS -->
+        <div class="puzzle-progress">
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="puzzleProgress">
+                </div>
+            </div>
+            <p class="progress-text" id="progressText">
+                0% complete
+            </p>
+        </div>
+
+    </div>
+
+    <!-- LEVEL COMPLETE POPUP -->
+    <div class="popup-overlay" id="levelCompletePopup">
+        <div class="popup-card">
+            <div class="popup-icon" id="popupIcon">🎉</div>
+            <h2 id="popupTitle">Level Complete!</h2>
+            <p id="popupMsg" class="subtitle"></p>
+
+            <div class="popup-stats">
+                <div class="popup-stat">
+                    <span>⏱️ Time</span>
+                    <span id="popupTime">0s</span>
+                </div>
+                <div class="popup-stat">
+                    <span>🎮 Moves</span>
+                    <span id="popupMoves">0</span>
+                </div>
+                <div class="popup-stat">
+                    <span>⭐ Points</span>
+                    <span id="popupPoints">0</span>
+                </div>
+            </div>
+
+            <div id="popupButtons">
+            </div>
+        </div>
+    </div>
+
+    <!-- QUIT CONFIRM -->
+    <div class="popup-overlay" id="quitPopup">
+        <div class="popup-card">
+            <div class="popup-icon">🏠</div>
+            <h2>Quit Game?</h2>
+            <p class="subtitle">
+                Your progress is saved!
+                You can resume anytime!
+            </p>
+            <button class="main-btn" onclick="quitGame()">
+                🏠 Save & Quit
+            </button>
+            <button class="back-game-btn" 
+                    onclick="closeQuit()">
+                🎮 Keep Playing
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- CONFETTI -->
+<div id="confettiContainer"></div>
+
+<script>
+// ============================================================
+//   GAME DATA
+// ============================================================
+const LEVELS = {
+    1: {
+        name  : 'The Lost Temple',
+        icon  : '🏛️',
+        story : 'Deep in the jungle, an ancient temple holds secrets! Solve the puzzle to unlock the temple gate and discover what lies within!',
+        grid  : 3,
+        colors: ['#FF6B6B','#FF8E53','#FFC300',
+                 '#2ECC71','#3498DB','#9B59B6',
+                 '#1ABC9C','#E74C3C','#F39C12'],
+        bg    : 'linear-gradient(135deg, #134E5E, #71B280)',
+        timeBonus: 100
+    },
+    2: {
+        name  : 'The Dark Forest',
+        icon  : '🌲',
+        story : 'A mysterious forest blocks your path! Strange creatures watch from the shadows. Solve the forest puzzle to find the hidden path forward!',
+        grid  : 4,
+        colors: ['#2ECC71','#27AE60','#1ABC9C',
+                 '#16A085','#3498DB','#2980B9',
+                 '#8E44AD','#6C3483','#F39C12',
+                 '#D35400','#E74C3C','#C0392B',
+                 '#ECF0F1','#BDC3C7','#95A5A6','#7F8C8D'],
+        bg    : 'linear-gradient(135deg, #0F2027, #203A43, #2C5364)',
+        timeBonus: 150
+    },
+    3: {
+        name  : 'The Ice Castle',
+        icon  : '❄️',
+        story : 'A magnificent castle made entirely of ice! The walls shimmer with frozen magic. Solve the ice puzzle before it melts away!',
+        grid  : 4,
+        colors: ['#74B9FF','#0984E3','#A29BFE',
+                 '#6C5CE7','#FD79A8','#E84393',
+                 '#00CEC9','#00B894','#FDCB6E',
+                 '#E17055','#DFE6E9','#B2BEC3',
+                 '#636E72','#2D3436','#81ECEC','#55EFC4'],
+        bg    : 'linear-gradient(135deg, #2980B9, #6DD5FA, #ffffff)',
+        timeBonus: 200
+    },
+    4: {
+        name  : 'The Final Dungeon',
+        icon  : '🏰',
+        story : 'The ultimate challenge awaits! Dark magic fills the dungeon. Only the greatest puzzle master can escape! This is your final test!',
+        grid  : 5,
+        colors: [
+            '#FF6B6B','#FF8E53','#FFC300','#2ECC71',
+            '#3498DB','#9B59B6','#1ABC9C','#E74C3C',
+            '#F39C12','#D35400','#8E44AD','#2980B9',
+            '#27AE60','#16A085','#C0392B','#7F8C8D',
+            '#BDC3C7','#ECF0F1','#F8C471','#A569BD',
+            '#5DADE2','#48C9B0','#F1948A','#82E0AA','#F7DC6F'
+        ],
+        bg    : 'linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)',
+        timeBonus: 300
+    }
+};
+
+const BOT_SPEEDS = {
+    easy  : { min: 8000,  max: 15000 },
+    medium: { min: 4000,  max: 8000  },
+    hard  : { min: 1500,  max: 4000  }
+};
+
+// ============================================================
+//   STATE
+// ============================================================
+let gameData     = null;
+let currentLevel = 1;
+let tiles        = [];
+let emptyIndex   = 0;
+let moves        = 0;
+let hintsLeft    = 3;
+let timerInterval= null;
+let seconds      = 0;
+let levelStartTime = 0;
+let isAnimating  = false;
+let currentTurn  = 'p1';
+let botTimeout   = null;
+
+// ============================================================
+//   INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    gameData = JSON.parse(sessionStorage.getItem('gameData'));
+    if (!gameData) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    currentLevel = gameData.currentLevel || 1;
+    currentTurn  = gameData.currentTurn  || 'p1';
+
+    createParticles();
+    updateUI();
+    showStory();
+});
+
+// ============================================================
+//   PARTICLES
+// ============================================================
+function createParticles() {
+    const c = document.getElementById('particles');
+    const emojis = ['🧩','⭐','✨','💫'];
+    for (let i = 0; i < 15; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.textContent = 
+            emojis[Math.floor(Math.random()*emojis.length)];
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.top  = Math.random() * 100 + 'vh';
+        p.style.fontSize = Math.random()*15+8+'px';
+        p.style.animationDuration = Math.random()*12+6+'s';
+        p.style.animationDelay    = Math.random()*5+'s';
+        p.style.opacity = '0.1';
+        c.appendChild(p);
+    }
+}
+
+// ============================================================
+//   UPDATE UI
+// ============================================================
+function updateUI() {
+    document.getElementById('p1Name').textContent =
+        gameData.p1Name;
+    document.getElementById('p2Name').textContent =
+        gameData.p2Name;
+    document.getElementById('p1Score').textContent =
+        gameData.p1Score;
+    document.getElementById('p2Score').textContent =
+        gameData.p2Score;
+    document.getElementById('levelBadge').textContent =
+        'Level ' + currentLevel;
+
+    const turnName = currentTurn === 'p1'
+        ? gameData.p1Name
+        : gameData.p2Name;
+    document.getElementById('turnDisplay').textContent =
+        '🎮 ' + turnName + "'s Turn";
+}
+
+// ============================================================
+//   SHOW STORY
+// ============================================================
+function showStory() {
+    const lvl = LEVELS[currentLevel];
+    document.body.style.background = lvl.bg;
+    document.getElementById('storyIcon').textContent  = lvl.icon;
+    document.getElementById('storyTitle').textContent = lvl.name;
+    document.getElementById('storyText').textContent  = lvl.story;
+
+    const btn = document.getElementById('startLevelBtn');
+    const turnName = currentTurn === 'p1'
+        ? gameData.p1Name
+        : gameData.p2Name;
+    btn.textContent = '🎮 ' + turnName + ' - Start Puzzle!';
+
+    document.getElementById('storyCard').style.display  = 'block';
+    document.getElementById('puzzleArea').style.display = 'none';
+}
+
+// ============================================================
+//   START LEVEL
+// ============================================================
+function startLevel() {
+    document.getElementById('storyCard').style.display  = 'none';
+    document.getElementById('puzzleArea').style.display = 'block';
+
+    const turnName = currentTurn === 'p1'
+        ? gameData.p1Name
+        : gameData.p2Name;
+    document.getElementById('currentPlayerBanner').textContent =
+        '👤 ' + turnName + ' - Solve the Puzzle!';
+
+    moves     = 0;
+    hintsLeft = 3;
+    seconds   = 0;
+
+    document.getElementById('movesCount').textContent = '0';
+    document.getElementById('hintBtn').textContent =
+        '💡 Hint (' + hintsLeft + ' left)';
+
+    createPuzzle();
+    startTimer();
+
+    levelStartTime = Date.now();
+
+    // If bot turn in PVB mode
+    if (gameData.mode === 'pvb' && currentTurn === 'p2') {
+        disablePlayerInput(true);
+        runBot();
+    }
+}
+
+// ============================================================
+//   CREATE PUZZLE (Sliding Tile)
+// ============================================================
+function createPuzzle() {
+    const lvl     = LEVELS[currentLevel];
+    const size    = lvl.grid;
+    const total   = size * size;
+    const grid    = document.getElementById('puzzleGrid');
+
+    grid.style.gridTemplateColumns =
+        'repeat(' + size + ', 1fr)';
+    grid.innerHTML = '';
+
+    // Create solved state
+    tiles = [];
+    for (let i = 0; i < total; i++) {
+        tiles.push(i);
+    }
+
+    // Shuffle
+    for (let i = total - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+    }
+
+    emptyIndex = tiles.indexOf(total - 1);
+
+    renderPuzzle();
+    buildPreview();
+    updateProgress();
+}
+
+// ============================================================
+//   RENDER PUZZLE
+// ============================================================
+function renderPuzzle() {
+    const lvl   = LEVELS[currentLevel];
+    const size  = lvl.grid;
+    const total = size * size;
+    const grid  = document.getElementById('puzzleGrid');
+    grid.innerHTML = '';
+
+    tiles.forEach((val, idx) => {
+        const tile = document.createElement('div');
+
+        if (val === total - 1) {
+            tile.className = 'tile empty-tile';
+        } else {
+            tile.className = 'tile';
+            tile.style.background = lvl.colors[val];
+            tile.textContent = val + 1;
+            tile.style.fontSize =
+                size <= 3 ? '1.5rem' :
+                size === 4 ? '1.2rem' : '1rem';
+        }
+
+        tile.onclick = () => moveTile(idx);
+        grid.appendChild(tile);
+    });
+}
+
+// ============================================================
+//   BUILD PREVIEW
+// ============================================================
+function buildPreview() {
+    const lvl   = LEVELS[currentLevel];
+    const size  = lvl.grid;
+    const total = size * size;
+    const grid  = document.getElementById('previewGrid');
+
+    grid.style.gridTemplateColumns =
+        'repeat(' + size + ', 1fr)';
+    grid.innerHTML = '';
+
+    for (let i = 0; i < total; i++) {
+        const tile = document.createElement('div');
+        tile.className = 'tile preview-tile';
+        if (i === total - 1) {
+            tile.className += ' empty-tile';
+        } else {
+            tile.style.background = lvl.colors[i];
+            tile.textContent = i + 1;
+            tile.style.fontSize =
+                size <= 3 ? '1rem' :
+                size === 4 ? '0.8rem' : '0.7rem';
+        }
+        grid.appendChild(tile);
+    }
+}
+
+// ============================================================
+//   MOVE TILE
+// ============================================================
+function moveTile(clickedIdx) {
+    if (isAnimating) return;
+    if (gameData.mode === 'pvb' && currentTurn === 'p2') return;
+
+    const lvl  = LEVELS[currentLevel];
+    const size = lvl.grid;
+
+    const emptyRow = Math.floor(emptyIndex / size);
+    const emptyCol = emptyIndex % size;
+    const clickRow = Math.floor(clickedIdx / size);
+    const clickCol = clickedIdx % size;
+
+    const isAdjacent =
+        (Math.abs(emptyRow - clickRow) === 1 &&
+         emptyCol === clickCol) ||
+        (Math.abs(emptyCol - clickCol) === 1 &&
+         emptyRow === clickRow);
+
+    if (!isAdjacent) return;
+
+    // Swap
+    [tiles[emptyIndex], tiles[clickedIdx]] =
+        [tiles[clickedIdx], tiles[emptyIndex]];
+    emptyIndex = clickedIdx;
+    moves++;
+
+    document.getElementById('movesCount').textContent = moves;
+
+    isAnimating = true;
+    renderPuzzle();
+    setTimeout(() => {
+        isAnimating = false;
+        updateProgress();
+        checkWin();
+    }, 150);
+}
+
+// ============================================================
+//   BOT LOGIC
+// ============================================================
+function runBot() {
+    const speed = BOT_SPEEDS[gameData.difficulty];
+    const time  = Math.random() *
+                  (speed.max - speed.min) + speed.min;
+
+    // Bot solves after random time
+    botTimeout = setTimeout(() => {
+        solvePuzzleForBot();
+    }, time);
+}
+
+function solvePuzzleForBot() {
+    // Move tiles towards solved state gradually
+    const lvl   = LEVELS[currentLevel];
+    const size  = lvl.grid;
+    const total = size * size;
+    let botMoves = 0;
+    const maxMoves = 50;
+
+    const botInterval = setInterval(() => {
+        // Find a random valid move
+        const validMoves = getValidMoves();
+        if (validMoves.length > 0 && botMoves < maxMoves) {
+            const move =
+                validMoves[Math.floor(
+                    Math.random() * validMoves.length
+                )];
+            [tiles[emptyIndex], tiles[move]] =
+                [tiles[move], tiles[emptyIndex]];
+            emptyIndex = move;
+            botMoves++;
+            moves++;
+            renderPuzzle();
+            updateProgress();
+        } else {
+            clearInterval(botInterval);
+            // Bot finishes
+            botFinish();
+        }
+    }, 200);
+}
+
+function getValidMoves() {
+    const lvl  = LEVELS[currentLevel];
+    const size = lvl.grid;
+    const valid = [];
+    const emptyRow = Math.floor(emptyIndex / size);
+    const emptyCol = emptyIndex % size;
+
+    if (emptyRow > 0) valid.push(emptyIndex - size);
+    if (emptyRow < size-1) valid.push(emptyIndex + size);
+    if (emptyCol > 0) valid.push(emptyIndex - 1);
+    if (emptyCol < size-1) valid.push(emptyIndex + 1);
+
+    return valid;
+}
+
+function botFinish() {
+    // Solve puzzle completely for bot
+    const lvl   = LEVELS[currentLevel];
+    const total = lvl.grid * lvl.grid;
+    for (let i = 0; i < total; i++) {
+        tiles[i] = i;
+    }
+    emptyIndex = total - 1;
+    renderPuzzle();
+    updateProgress();
+
+    stopTimer();
+    const botTime    = seconds;
+    const botPoints  = calculatePoints(botTime, moves, true);
+
+    gameData.p2Score += botPoints;
+    gameData.p2Levels.push({
+        level : currentLevel,
+        time  : botTime,
+        moves : moves,
+        points: botPoints
+    });
+
+    document.getElementById('p2Score').textContent =
+        gameData.p2Score;
+
+    setTimeout(() => {
+        showBotResult(botPoints, botTime);
+    }, 500);
+}
+
+// ============================================================
+//   CHECK WIN
+// ============================================================
+function checkWin() {
+    const lvl   = LEVELS[currentLevel];
+    const total = lvl.grid * lvl.grid;
+    const isSolved = tiles.every((val, idx) => val === idx);
+
+    if (isSolved) {
+        stopTimer();
+        const timeTaken = seconds;
+        const points    = calculatePoints(timeTaken, moves, false);
+
+        if (currentTurn === 'p1') {
+            gameData.p1Score += points;
+            gameData.p1Levels.push({
+                level : currentLevel,
+                time  : timeTaken,
+                moves : moves,
+                points: points
+            });
+            document.getElementById('p1Score').textContent =
+                gameData.p1Score;
+        } else {
+            gameData.p2Score += points;
+            gameData.p2Levels.push({
+                level : currentLevel,
+                time  : timeTaken,
+                moves : moves,
+                points: points
+            });
+            document.getElementById('p2Score').textContent =
+                gameData.p2Score;
+        }
+
+        launchConfetti();
+        saveProgress();
+        setTimeout(() => showLevelComplete(points, timeTaken),600);
+    }
+}
+
+// ============================================================
+//   CALCULATE POINTS
+// ============================================================
+function calculatePoints(time, moves, isBot) {
+    const lvl      = LEVELS[currentLevel];
+    let points     = lvl.timeBonus;
+    const timePenalty = Math.floor(time / 5) * 10;
+    const movePenalty = Math.floor(moves / 10) * 5;
+    points = Math.max(10, points - timePenalty - movePenalty);
+    if (isBot) points = Math.floor(points * 0.85);
+    return points;
+}
+
+// ============================================================
+//   SHOW LEVEL COMPLETE
+// ============================================================
+function showLevelComplete(points, time) {
+    const popup = document.getElementById('levelCompletePopup');
+    const playerName = currentTurn === 'p1'
+        ? gameData.p1Name : gameData.p2Name;
+
+    document.getElementById('popupIcon').textContent  = '🎉';
+    document.getElementById('popupTitle').textContent =
+        'Level ' + currentLevel + ' Complete!';
+    document.getElementById('popupMsg').textContent   =
+        playerName + ' solved it! Amazing!';
+    document.getElementById('popupTime').textContent  =
+        formatTime(time);
+    document.getElementById('popupMoves').textContent = moves;
+    document.getElementById('popupPoints').textContent= '+' + points;
+
+    const btns = document.getElementById('popupButtons');
+
+    if (currentLevel < 4) {
+        if (gameData.mode === 'pvp') {
+            // Switch turn
+            const nextPlayer = currentTurn === 'p1'
+                ? gameData.p2Name : gameData.p1Name;
+            btns.innerHTML = `
+                <p style="color:#ffd32a; font-weight:700;
+                          margin-bottom:10px;">
+                    Now it's ${nextPlayer}'s turn!
+                </p>
+                <button class="main-btn" 
+                        onclick="switchTurnPVP()">
+                    👤 ${nextPlayer} - Play Same Level!
+                </button>
+                <button class="next-level-btn"
+                        onclick="nextLevel()">
+                    ⏭️ Next Level
+                </button>
+            `;
+        } else {
+            btns.innerHTML = `
+                <button class="main-btn" 
+                        onclick="nextLevel()">
+                    ⏭️ Next Level!
+                </button>
+                <button class="replay-btn" 
+                        onclick="replayLevel()">
+                    🔄 Replay Level
+                </button>
+            `;
+        }
+    } else {
+        btns.innerHTML = `
+            <button class="main-btn" onclick="finishGame()">
+                🏆 See Final Results!
+            </button>
+        `;
+    }
+
+    popup.classList.add('show');
+}
+
+// ============================================================
+//   SHOW BOT RESULT
+// ============================================================
+function showBotResult(points, time) {
+    const popup = document.getElementById('levelCompletePopup');
+    document.getElementById('popupIcon').textContent  = '🤖';
+    document.getElementById('popupTitle').textContent =
+        'Bot Finished!';
+    document.getElementById('popupMsg').textContent   =
+        'The bot solved the puzzle!';
+    document.getElementById('popupTime').textContent  =
+        formatTime(time);
+    document.getElementById('popupMoves').textContent = moves;
+    document.getElementById('popupPoints').textContent=
+        '+' + points + ' (Bot)';
+
+    const btns = document.getElementById('popupButtons');
+
+    if (currentLevel < 4) {
+        btns.innerHTML = `
+            <button class="main-btn" onclick="nextLevel()">
+                ⏭️ Next Level!
+            </button>
+        `;
+    } else {
+        btns.innerHTML = `
+            <button class="main-btn" onclick="finishGame()">
+                🏆 See Final Results!
+            </button>
+        `;
+    }
+
+    popup.classList.add('show');
+}
+
+// ============================================================
+//   SWITCH TURN PVP
+// ============================================================
+function switchTurnPVP() {
+    currentTurn = currentTurn === 'p1' ? 'p2' : 'p1';
+    gameData.currentTurn = currentTurn;
+    document.getElementById('levelCompletePopup')
+            .classList.remove('show');
+    updateUI();
+    showStory();
+}
+
+// ============================================================
+//   NEXT LEVEL
+// ============================================================
+function nextLevel() {
+    if (gameData.mode === 'pvp') {
+        currentTurn = 'p1';
+        gameData.currentTurn = 'p1';
+    }
+    currentLevel++;
+    gameData.currentLevel = currentLevel;
+    document.getElementById('levelCompletePopup')
+            .classList.remove('show');
+    updateUI();
+    saveProgress();
+    showStory();
+}
+
+// ============================================================
+//   REPLAY LEVEL
+// ============================================================
+function replayLevel() {
+    document.getElementById('levelCompletePopup')
+            .classList.remove('show');
+    startLevel();
+}
+
+// ============================================================
+//   FINISH GAME
+// ============================================================
+function finishGame() {
+    saveProgress();
+    sessionStorage.setItem('gameData', JSON.stringify(gameData));
+    window.location.href = 'end.html';
+}
+
+// ============================================================
+//   SAVE PROGRESS
+// ============================================================
+function saveProgress() {
+    const key = gameData.mode === 'pvp'
+        ? gameData.p1Name + '_' + gameData.p2Name
+        : gameData.p1Name;
+    const saves = JSON.parse(
+        localStorage.getItem('puzzleSaves') || '{}'
+    );
+    saves[key.toLowerCase()] = gameData;
+    localStorage.setItem('puzzleSaves', JSON.stringify(saves));
+}
+
+// ============================================================
+//   TIMER
+// ============================================================
+function startTimer() {
+    seconds = 0;
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        seconds++;
+        document.getElementById('timer').textContent =
+            formatTime(seconds);
+    }, 1000);
+}
+
+function stopTimer() {
+    clearInterval(timerInterval);
+}
+
+function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return (m < 10 ? '0' : '') + m + ':' +
+           (sec < 10 ? '0' : '') + sec;
+}
+
+// ============================================================
+//   HINT
+// ============================================================
+function useHint() {
+    if (hintsLeft <= 0) return;
+    hintsLeft--;
+
+    document.getElementById('hintBtn').textContent =
+        '💡 Hint (' + hintsLeft + ' left)';
+    if (hintsLeft === 0) {
+        document.getElementById('hintBtn').disabled = true;
+    }
+
+    // Show preview for 2 seconds
+    showPreview();
+    setTimeout(() => hidePreview(), 2000);
+}
+
+function showPreview() {
+    document.getElementById('previewOverlay')
+            .classList.add('show');
+}
+
+function hidePreview() {
+    document.getElementById('previewOverlay')
+            .classList.remove('show');
+}
+
+// ============================================================
+//   PROGRESS
+// ============================================================
+function updateProgress() {
+    const lvl   = LEVELS[currentLevel];
+    const total = lvl.grid * lvl.grid;
+    let correct = 0;
+    tiles.forEach((val, idx) => {
+        if (val === idx) correct++;
+    });
+    const pct = Math.round((correct / total) * 100);
+    document.getElementById('puzzleProgress').style.width =
+        pct + '%';
+    document.getElementById('progressText').textContent =
+        pct + '% complete';
+}
+
+// ============================================================
+//   DISABLE INPUT
+// ============================================================
+function disablePlayerInput(disable) {
+    const grid = document.getElementById('puzzleGrid');
+    grid.style.pointerEvents = disable ? 'none' : 'all';
+    grid.style.opacity       = disable ? '0.7' : '1';
+}
+
+// ============================================================
+//   CONFETTI
+// ============================================================
+function launchConfetti() {
+    const c = document.getElementById('confettiContainer');
+    const colors = [
+        '#FF6B6B','#FFD32A','#00D26A',
+        '#A855F7','#00CEC9','#FD79A8'
+    ];
+    for (let i = 0; i < 80; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.background =
+            colors[Math.floor(Math.random() * colors.length)];
+        p.style.width  = Math.random() * 12 + 6 + 'px';
+        p.style.height = p.style.width;
+        p.style.animationDelay    = Math.random() * 0.5 + 's';
+        p.style.animationDuration = Math.random() * 2 + 1.5 + 's';
+        p.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        c.appendChild(p);
+        setTimeout(() => p.remove(), 3000);
+    }
+}
+
+// ============================================================
+//   QUIT
+// ============================================================
+function confirmQuit() {
+    saveProgress();
+    document.getElementById('quitPopup').classList.add('show');
+}
+
+function closeQuit() {
+    document.getElementById('quitPopup').classList.remove('show');
+}
+
+function quitGame() {
+    saveProgress();
+    window.location.href = 'index.html';
+}
+</script>
+</body>
+</html>
