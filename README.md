@@ -6,7 +6,6 @@ Markdown
 
 ### A Story Based Sliding Puzzle Game With Battle Mode!
 
-![Game Banner](https://img.shields.io/badge/Puzzle-Adventure-FFD700?style=for-the-badge&logo=googlechrome&logoColor=black)
 ![Made With](https://img.shields.io/badge/Made%20With-HTML%20CSS%20JS-FFA500?style=for-the-badge)
 ![By](https://img.shields.io/badge/By-Vimal%20Raj%20Mandal-FFD700?style=for-the-badge)
 ![Country](https://img.shields.io/badge/India-🇮🇳-FFA500?style=for-the-badge)
@@ -15,7 +14,7 @@ Markdown
 
 <br>
 
-### 🌐 [▶️ PLAY THE GAME NOW](https://YOUR-USERNAME.github.io/puzzle-adventure/)
+### 🌐 [▶️ PLAY THE GAME NOW](https://github.com/vimalrajmandal586)
 
 <br>
 
